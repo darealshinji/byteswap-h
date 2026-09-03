@@ -72,13 +72,13 @@
   Generic macros for all signed and unsigned integers.
   Minimum requirement is C11 or C++11.
 
-      uintXX_t BSWAP(uintXX_t x);
-      uintXX_t HOST_TO_BE(uintXX_t host_bits);
-      uintXX_t HOST_TO_LE(uintXX_t host_bits);
-      uintXX_t BE_TO_HOST(uintXX_t big_endian_bits);
-      uintXX_t LE_TO_HOST(uintXX_t little_endian_bits);
-      uintXX_t HTON(uintXX_t host_bits);
-      uintXX_t NTOH(uintXX_t net_bits);
+      intX_t BSWAP(intX_t x);
+      intX_t HOST_TO_BE(intX_t host_bits);
+      intX_t HOST_TO_LE(intX_t host_bits);
+      intX_t BE_TO_HOST(intX_t big_endian_bits);
+      intX_t LE_TO_HOST(intX_t little_endian_bits);
+      intX_t HTON(intX_t host_bits);
+      intX_t NTOH(intX_t net_bits);
 
 
   The following function returns 1 (true) if byte order is Big Endian
@@ -119,7 +119,7 @@
 # endif
 #endif
 
-/* these headers should provide byte order macros */
+/* these headers might provide byte order macros */
 #ifdef HAVE_ENDIAN_H
 # include <endian.h>
 #endif
@@ -160,64 +160,44 @@
     __has_builtin(__builtin_bswap64)
 #  define HAVE_BUILTIN_BSWAP 1
 # endif
-# if !defined(HAVE_BUILTIN_CONSTANT_P) && \
-    __has_builtin(__builtin_constant_p)
-#  define HAVE_BUILTIN_CONSTANT_P 1
-# endif
-#endif
-
-/* compile-time constant check for optimizations */
-#ifdef HAVE_BUILTIN_CONSTANT_P
-# define IS_CONSTANT_P(x)  __builtin_constant_p(x)
-#else
-# define IS_CONSTANT_P(x)  0
 #endif
 
 
 /* BSWAP macros */
 
-#define CONST_BSWAP16(x) \
-    ((uint16_t)((((uint16_t)(x) & 0xff00) >> 8) | \
-                (((uint16_t)(x) & 0x00ff) << 8)))
-
-#define CONST_BSWAP32(x) \
-    ((uint32_t)((((uint32_t)(x) & 0xff000000) >> 24) | \
-                (((uint32_t)(x) & 0x00ff0000) >>  8) | \
-                (((uint32_t)(x) & 0x0000ff00) <<  8) | \
-                (((uint32_t)(x) & 0x000000ff) << 24)))
-
-#define CONST_BSWAP64(x) \
-    ((uint64_t)((((uint64_t)(x) & 0xff00000000000000ULL) >> 56) | \
-                (((uint64_t)(x) & 0x00ff000000000000ULL) >> 40) | \
-                (((uint64_t)(x) & 0x0000ff0000000000ULL) >> 24) | \
-                (((uint64_t)(x) & 0x000000ff00000000ULL) >>  8) | \
-                (((uint64_t)(x) & 0x00000000ff000000ULL) <<  8) | \
-                (((uint64_t)(x) & 0x0000000000ff0000ULL) << 24) | \
-                (((uint64_t)(x) & 0x000000000000ff00ULL) << 40) | \
-                (((uint64_t)(x) & 0x00000000000000ffULL) << 56)))
-
 #if defined(HAVE_BUILTIN_BSWAP) || defined(__GNUC__)
 /* GNU extension builtins */
-# define BSWAP16(x)  (IS_CONSTANT_P(x) ? CONST_BSWAP16(x) : __builtin_bswap16(x))
-# define BSWAP32(x)  (IS_CONSTANT_P(x) ? CONST_BSWAP32(x) : __builtin_bswap32(x))
-# define BSWAP64(x)  (IS_CONSTANT_P(x) ? CONST_BSWAP64(x) : __builtin_bswap64(x))
+# define BSWAP16(x)  __builtin_bswap16(x)
+# define BSWAP32(x)  __builtin_bswap32(x)
+# define BSWAP64(x)  __builtin_bswap64(x)
 #elif defined(_MSC_VER)
 /* MSVC byteswap intrinsics */
 # pragma intrinsic(_byteswap_ushort, _byteswap_ulong, _byteswap_uint64)
-# define BSWAP16(x)  (IS_CONSTANT_P(x) ? CONST_BSWAP16(x) : _byteswap_ushort(x))
-# define BSWAP32(x)  (IS_CONSTANT_P(x) ? CONST_BSWAP32(x) : _byteswap_ulong(x))
-# define BSWAP64(x)  (IS_CONSTANT_P(x) ? CONST_BSWAP64(x) : _byteswap_uint64(x))
+# define BSWAP16(x)  _byteswap_ushort(x)
+# define BSWAP32(x)  _byteswap_ulong(x)
+# define BSWAP64(x)  _byteswap_uint64(x)
 #elif defined(__cpp_lib_byteswap)
 /* C++23 byteswap template */
-# define BSWAP16(x)  (IS_CONSTANT_P(x) ? CONST_BSWAP16(x) : std::byteswap<uint16_t>(x))
-# define BSWAP32(x)  (IS_CONSTANT_P(x) ? CONST_BSWAP32(x) : std::byteswap<uint32_t>(x))
-# define BSWAP64(x)  (IS_CONSTANT_P(x) ? CONST_BSWAP64(x) : std::byteswap<uint64_t>(x))
+# define BSWAP16(x)  std::byteswap<uint16_t>(x)
+# define BSWAP32(x)  std::byteswap<uint32_t>(x)
+# define BSWAP64(x)  std::byteswap<uint64_t>(x)
 #else
 /* fall back to bit shifting; with optimizations enabled many compilers will
  * recognize the byte swapping and generate the same code as if using builtins */
-# define BSWAP16(x)  CONST_BSWAP16(x)
-# define BSWAP32(x)  CONST_BSWAP32(x)
-# define BSWAP64(x)  CONST_BSWAP64(x)
+#define BSWAP16(x) ((((uint16_t)(x) & 0xff00) >> 8) | \
+                    (((uint16_t)(x) & 0x00ff) << 8))
+#define BSWAP32(x) ((((uint32_t)(x) & 0xff000000) >> 24) | \
+                    (((uint32_t)(x) & 0x00ff0000) >>  8) | \
+                    (((uint32_t)(x) & 0x0000ff00) <<  8) | \
+                    (((uint32_t)(x) & 0x000000ff) << 24))
+#define BSWAP64(x) ((((uint64_t)(x) & 0xff00000000000000ULL) >> 56) | \
+                    (((uint64_t)(x) & 0x00ff000000000000ULL) >> 40) | \
+                    (((uint64_t)(x) & 0x0000ff0000000000ULL) >> 24) | \
+                    (((uint64_t)(x) & 0x000000ff00000000ULL) >>  8) | \
+                    (((uint64_t)(x) & 0x00000000ff000000ULL) <<  8) | \
+                    (((uint64_t)(x) & 0x0000000000ff0000ULL) << 24) | \
+                    (((uint64_t)(x) & 0x000000000000ff00ULL) << 40) | \
+                    (((uint64_t)(x) & 0x00000000000000ffULL) << 56))
 #endif
 
 
