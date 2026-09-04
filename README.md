@@ -65,3 +65,15 @@ These convenience macros are available too:
 #define HOST_IS_BIG()    (big_endian_host() == 1)
 #define HOST_IS_LITTLE() (big_endian_host() == 0)
 ```
+
+Configuration macros can be set too:
+``` C
+#define DISABLE_CPLUSPLUS 1        // disable all C++ features even when compiling in C++ mode
+#define HAVE_ENDIAN_H 1            // <endian.h> is present
+#define HAVE_SYS_PARAM_H 1         // <sys/param.h> is present
+#define HAVE_CXX_HEADER_VERSION 1  // <version> is present
+#define HAVE_CXX_HEADER_BIT 1      // <bit> is present
+#define HAVE_STDC11 1              // C11 is available
+#define HAVE_STDCXX11 1            // C++11 is available
+#define HAVE_STDCXX20 1            // C++20 is available
+```

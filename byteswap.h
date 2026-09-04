@@ -94,6 +94,17 @@
       #define HOST_IS_BIG()    (big_endian_host() == 1)
       #define HOST_IS_LITTLE() (big_endian_host() == 0)
 
+
+  Configuration macros can be set too:
+
+      #define DISABLE_CPLUSPLUS 1        // disable all C++ features even when compiling in C++ mode
+      #define HAVE_ENDIAN_H 1            // <endian.h> is present
+      #define HAVE_SYS_PARAM_H 1         // <sys/param.h> is present
+      #define HAVE_CXX_HEADER_VERSION 1  // <version> is present
+      #define HAVE_CXX_HEADER_BIT 1      // <bit> is present
+      #define HAVE_STDC11 1              // C11 is available
+      #define HAVE_STDCXX11 1            // C++11 is available
+      #define HAVE_STDCXX20 1            // C++20 is available
 **/
 
 #include <stdint.h>
@@ -111,11 +122,13 @@
 # if !defined(HAVE_SYS_PARAM_H) && __has_include(<sys/param.h>)
 #  define HAVE_SYS_PARAM_H 1
 # endif
-# if !defined(HAVE_CXX_HEADER_VERSION) && __has_include(<version>)
-#  define HAVE_CXX_HEADER_VERSION 1
-# endif
-# if !defined(HAVE_CXX_HEADER_BIT) && __has_include(<bit>)
-#  define HAVE_CXX_HEADER_BIT 1
+# if defined(__cplusplus) && !defined(DISABLE_CPLUSPLUS)
+#  if !defined(HAVE_CXX_HEADER_VERSION) && __has_include(<version>)
+#   define HAVE_CXX_HEADER_VERSION 1
+#  endif
+#  if !defined(HAVE_CXX_HEADER_BIT) && __has_include(<bit>)
+#   define HAVE_CXX_HEADER_BIT 1
+#  endif
 # endif
 #endif
 
@@ -133,25 +146,37 @@
 # endif
 #endif
 
-#ifdef __cplusplus
-# if !defined(HAVE_STDCXX11) && __cplusplus >= 201103L
+#if defined(__cplusplus) && !defined(DISABLE_CPLUSPLUS)
+# if defined(_MSC_VER) && defined(_MSVC_LANG)
+/* MSVC always sets __cplusplus as 199711L unless the
+ * compiler option -Zc:__cplusplus was given */
+#  define BSWAP_CXX_VERSION _MSVC_LANG
+# else
+#  define BSWAP_CXX_VERSION __cplusplus
+# endif
+
+# if !defined(HAVE_STDCXX11) && BSWAP_CXX_VERSION >= 201103L
 #  define HAVE_STDCXX11 1
 # endif
-# if !defined(HAVE_STDCXX20) && __cplusplus >= 202002L
+# if !defined(HAVE_STDCXX20) && BSWAP_CXX_VERSION >= 202002L
 #  define HAVE_STDCXX20 1
 # endif
+# undef BSWAP_CXX_VERSION
+
 # ifdef HAVE_STDCXX11
 #  include <type_traits> /* for templates */
 # endif
+
 # if defined(HAVE_CXX_HEADER_VERSION) || defined(HAVE_STDCXX20)
 #  include <version> /* library feature checks */
 # endif
+
 # if defined(HAVE_CXX_HEADER_BIT) || \
      defined(__cpp_lib_endian) || \
      defined(__cpp_lib_byteswap)
 #  include <bit> /* std::endian, std::byteswap */
 # endif
-#endif
+#endif /* __cplusplus && !DISABLE_CPLUSPLUS */
 
 #ifdef __has_builtin
 # if !defined(HAVE_BUILTIN_BSWAP) && \
@@ -176,7 +201,7 @@
 # define BSWAP16(x)  _byteswap_ushort(x)
 # define BSWAP32(x)  _byteswap_ulong(x)
 # define BSWAP64(x)  _byteswap_uint64(x)
-#elif defined(__cpp_lib_byteswap)
+#elif defined(__cpp_lib_byteswap) && !defined(DISABLE_CPLUSPLUS)
 /* C++23 byteswap template */
 # define BSWAP16(x)  std::byteswap<uint16_t>(x)
 # define BSWAP32(x)  std::byteswap<uint32_t>(x)
@@ -237,7 +262,7 @@ static inline int big_endian_host(void)
     return 1;
 
 /* C++20 std::endian enum values */
-#elif defined(__cpp_lib_endian)
+#elif defined(__cpp_lib_endian) && !defined(DISABLE_CPLUSPLUS)
     return constexpr (std::endian::native == std::endian::big);
 
 #else
@@ -287,7 +312,7 @@ static inline int big_endian_host(void)
 
 /* generic macros */
 
-#ifdef HAVE_STDCXX11
+#if defined(HAVE_STDCXX11) && !defined(DISABLE_CPLUSPLUS)
 
 /* C++ function template similar to std::byteswap() */
 template<typename T, typename std::enable_if<std::is_integral<T>::value, bool>::type = true>
@@ -326,7 +351,7 @@ constexpr T bswap(T val) noexcept
 
 #endif
 
-#if defined(HAVE_STDCXX11) || defined(HAVE_STDC11)
+#ifdef BSWAP
 # define BE_TO_HOST(x)  (HOST_IS_BIG()    ? (x) : BSWAP(x))
 # define LE_TO_HOST(x)  (HOST_IS_LITTLE() ? (x) : BSWAP(x))
 # define HOST_TO_BE(x)  (HOST_IS_BIG()    ? (x) : BSWAP(x))
