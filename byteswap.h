@@ -99,7 +99,7 @@
 
       #define DISABLE_CPLUSPLUS 1        // disable all C++ features even when compiling in C++ mode
       #define HAVE_ENDIAN_H 1            // <endian.h> is present
-      #define HAVE_SYS_PARAM_H 1         // <sys/param.h> is present
+      #define HAVE_SYS_ENDIAN_H 1        // <sys/endian.h> is present
       #define HAVE_CXX_HEADER_VERSION 1  // <version> is present
       #define HAVE_CXX_HEADER_BIT 1      // <bit> is present
       #define HAVE_STDC11 1              // C11 is available
@@ -119,8 +119,8 @@
 # if !defined(HAVE_ENDIAN_H) && __has_include(<endian.h>)
 #  define HAVE_ENDIAN_H 1
 # endif
-# if !defined(HAVE_SYS_PARAM_H) && __has_include(<sys/param.h>)
-#  define HAVE_SYS_PARAM_H 1
+# if !defined(HAVE_SYS_ENDIAN_H) && __has_include(<sys/endian.h>)
+#  define HAVE_SYS_ENDIAN_H 1
 # endif
 # if defined(__cplusplus) && !defined(DISABLE_CPLUSPLUS)
 #  if !defined(HAVE_CXX_HEADER_VERSION) && __has_include(<version>)
@@ -132,20 +132,22 @@
 # endif
 #endif
 
-/* these headers might provide byte order macros */
+/* byte order macros */
 #ifdef HAVE_ENDIAN_H
 # include <endian.h>
 #endif
-#ifdef HAVE_SYS_PARAM_H
-# include <sys/param.h>
+#ifdef HAVE_SYS_ENDIAN_H
+# include <sys/endian.h>
 #endif
 
+/* C11 */
 #ifdef __STDC_VERSION__
 # if !defined(HAVE_STDC11) && __STDC_VERSION__ >= 201112L
 #  define HAVE_STDC11 1
 # endif
 #endif
 
+/* C++11, C++20 */
 #if defined(__cplusplus) && !defined(DISABLE_CPLUSPLUS)
 # if defined(_MSC_VER) && defined(_MSVC_LANG)
 /* MSVC always sets __cplusplus as 199711L unless the
@@ -178,6 +180,7 @@
 # endif
 #endif /* __cplusplus && !DISABLE_CPLUSPLUS */
 
+/* bswap builtin functions */
 #ifdef __has_builtin
 # if !defined(HAVE_BUILTIN_BSWAP) && \
     __has_builtin(__builtin_bswap16) && \
@@ -230,7 +233,7 @@
  * and 0 (false) for Little Endian */
 static inline int big_endian_host(void)
 {
-/* byte order macros defined by compiler or headers */
+/* byte order macros defined by compiler or system headers */
 #if defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__)
     return (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__);
 #elif defined(__BYTE_ORDER) && defined(__ORDER_BIG_ENDIAN)
@@ -240,25 +243,23 @@ static inline int big_endian_host(void)
 #elif defined(BYTE_ORDER) && defined(ORDER_BIG_ENDIAN)
     return (BYTE_ORDER == ORDER_BIG_ENDIAN);
 
-/* numeric values in Stratus VOS are always Big Endian, regardless
- * of the endianness of the underlying hardware platform */
-#elif defined(__VOS__)
-    return 1;
-
-/* x86 is always Little Endian */
-#elif defined(__amd64)  || defined(__i386)  || defined(__x86_64) || \
-      defined(_M_AMD64) || defined(_M_IX86) || defined(_M_X64)
-    return 0;
-
-/* Little Endian ARM and MIPS */
-#elif defined(__ARMEL__) || defined(__THUMBEL__) || defined(__AARCH64EL__) || \
+/* Little Endian architectures */
+#elif /* x86 */ \
+      defined(__amd64)   || defined(__i386)      || defined(__x86_64)      || \
+      defined(_M_AMD64)  || defined(_M_IX86)     || defined(_M_X64)        || \
+      /* ARM EL */ \
+      defined(__ARMEL__) || defined(__THUMBEL__) || defined(__AARCH64EL__) || \
+      /* MIPS EL */ \
       defined(_MIPSEL)   || defined(__MIPSEL)    || defined(__MIPSEL__)
     return 0;
 
-/* Big Endian ARM and MIPS; today architectures like PowerPC or
- * SPARC64 are often bi-endian, so no assumtions here */
-#elif defined(__ARMEB__) || defined(__THUMBEB__) || defined(__AARCH64EB__) || \
-      defined(_MIPSEB)   || defined(__MIPSEB)    || defined(__MIPSEB__)
+/* Big Endian architectures; many others are bi-endian */
+#elif /* ARM EB */ \
+      defined(__ARMEB__) || defined(__THUMBEB__) || defined(__AARCH64EB__) || \
+      /* MIPS EB */ \
+      defined(_MIPSEB)   || defined(__MIPSEB)    || defined(__MIPSEB__)    || \
+      /* z/Architecture */ \
+      defined(__s390x__) || defined(__zarch__)   || defined(__SYSC_ZARCH__)
     return 1;
 
 /* C++20 std::endian enum values */
