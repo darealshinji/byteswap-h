@@ -194,91 +194,131 @@
 /* BSWAP macros */
 
 #if defined(HAVE_BUILTIN_BSWAP) || defined(__GNUC__)
+
 /* GNU extension builtins */
 # define BSWAP16(x)  __builtin_bswap16(x)
 # define BSWAP32(x)  __builtin_bswap32(x)
 # define BSWAP64(x)  __builtin_bswap64(x)
+
 #elif defined(_MSC_VER)
+
 /* MSVC byteswap intrinsics */
 # pragma intrinsic(_byteswap_ushort, _byteswap_ulong, _byteswap_uint64)
 # define BSWAP16(x)  _byteswap_ushort(x)
 # define BSWAP32(x)  _byteswap_ulong(x)
 # define BSWAP64(x)  _byteswap_uint64(x)
+
 #elif defined(__cpp_lib_byteswap) && !defined(DISABLE_CPLUSPLUS)
+
 /* C++23 byteswap template */
 # define BSWAP16(x)  std::byteswap<uint16_t>(x)
 # define BSWAP32(x)  std::byteswap<uint32_t>(x)
 # define BSWAP64(x)  std::byteswap<uint64_t>(x)
+
 #else
+
 /* fall back to bit shifting; with optimizations enabled many compilers will
  * recognize the byte swapping and generate the same code as if using builtins */
-#define BSWAP16(x) ((((uint16_t)(x) & 0xff00) >> 8) | \
-                    (((uint16_t)(x) & 0x00ff) << 8))
-#define BSWAP32(x) ((((uint32_t)(x) & 0xff000000) >> 24) | \
-                    (((uint32_t)(x) & 0x00ff0000) >>  8) | \
-                    (((uint32_t)(x) & 0x0000ff00) <<  8) | \
-                    (((uint32_t)(x) & 0x000000ff) << 24))
-#define BSWAP64(x) ((((uint64_t)(x) & 0xff00000000000000ULL) >> 56) | \
-                    (((uint64_t)(x) & 0x00ff000000000000ULL) >> 40) | \
-                    (((uint64_t)(x) & 0x0000ff0000000000ULL) >> 24) | \
-                    (((uint64_t)(x) & 0x000000ff00000000ULL) >>  8) | \
-                    (((uint64_t)(x) & 0x00000000ff000000ULL) <<  8) | \
-                    (((uint64_t)(x) & 0x0000000000ff0000ULL) << 24) | \
-                    (((uint64_t)(x) & 0x000000000000ff00ULL) << 40) | \
-                    (((uint64_t)(x) & 0x00000000000000ffULL) << 56))
+# define BSWAP16(x) ((((uint16_t)(x) & 0xff00) >> 8) | \
+                     (((uint16_t)(x) & 0x00ff) << 8))
+# define BSWAP32(x) ((((uint32_t)(x) & 0xff000000) >> 24) | \
+                     (((uint32_t)(x) & 0x00ff0000) >>  8) | \
+                     (((uint32_t)(x) & 0x0000ff00) <<  8) | \
+                     (((uint32_t)(x) & 0x000000ff) << 24))
+# define BSWAP64(x) ((((uint64_t)(x) & 0xff00000000000000ULL) >> 56) | \
+                     (((uint64_t)(x) & 0x00ff000000000000ULL) >> 40) | \
+                     (((uint64_t)(x) & 0x0000ff0000000000ULL) >> 24) | \
+                     (((uint64_t)(x) & 0x000000ff00000000ULL) >>  8) | \
+                     (((uint64_t)(x) & 0x00000000ff000000ULL) <<  8) | \
+                     (((uint64_t)(x) & 0x0000000000ff0000ULL) << 24) | \
+                     (((uint64_t)(x) & 0x000000000000ff00ULL) << 40) | \
+                     (((uint64_t)(x) & 0x00000000000000ffULL) << 56))
+
 #endif
 
 
-/* return value is 1 (true) for Big Endian
- * and 0 (false) for Little Endian */
-static inline int big_endian_host(void)
-{
 /* byte order macros defined by compiler or system headers */
-#if defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__)
-    return (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__);
-#elif defined(__BYTE_ORDER) && defined(__ORDER_BIG_ENDIAN)
-    return (__BYTE_ORDER == __ORDER_BIG_ENDIAN);
-#elif defined(_BYTE_ORDER) && defined(_ORDER_BIG_ENDIAN)
-    return (_BYTE_ORDER == _ORDER_BIG_ENDIAN);
-#elif defined(BYTE_ORDER) && defined(ORDER_BIG_ENDIAN)
-    return (BYTE_ORDER == ORDER_BIG_ENDIAN);
+#if defined(__BYTE_ORDER__) && \
+    defined(__ORDER_BIG_ENDIAN__)
+
+# define BE_HOST_VAL  (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+
+#elif defined(__BYTE_ORDER) && \
+      defined(__ORDER_BIG_ENDIAN)
+
+# define BE_HOST_VAL  (__BYTE_ORDER == __ORDER_BIG_ENDIAN)
+
+#elif defined(_BYTE_ORDER) && \
+      defined(_ORDER_BIG_ENDIAN)
+
+# define BE_HOST_VAL  (_BYTE_ORDER == _ORDER_BIG_ENDIAN)
+
+#elif defined(BYTE_ORDER) && \
+      defined(ORDER_BIG_ENDIAN)
+
+# define BE_HOST_VAL  (BYTE_ORDER == ORDER_BIG_ENDIAN)
 
 /* Little Endian architectures */
-#elif /* x86 */ \
-      defined(__amd64)   || defined(__i386)      || defined(__x86_64)      || \
-      defined(_M_AMD64)  || defined(_M_IX86)     || defined(_M_X64)        || \
-      /* ARM EL */ \
-      defined(__ARMEL__) || defined(__THUMBEL__) || defined(__AARCH64EL__) || \
-      /* MIPS EL */ \
-      defined(_MIPSEL)   || defined(__MIPSEL)    || defined(__MIPSEL__)
-    return 0;
+#elif defined(__amd64) \
+   || defined(__i386) \
+   || defined(__x86_64) \
+   || defined(_M_AMD64) \
+   || defined(_M_IX86) \
+   || defined(_M_X64) \
+   || defined(__ARMEL__) \
+   || defined(__THUMBEL__) \
+   || defined(__AARCH64EL__) \
+   || defined(_MIPSEL) \
+   || defined(__MIPSEL) \
+   || defined(__MIPSEL__) \
+   || defined(__BFIN__)
 
-/* Big Endian architectures; many others are bi-endian */
-#elif /* ARM EB */ \
-      defined(__ARMEB__) || defined(__THUMBEB__) || defined(__AARCH64EB__) || \
-      /* MIPS EB */ \
-      defined(_MIPSEB)   || defined(__MIPSEB)    || defined(__MIPSEB__)    || \
-      /* z/Architecture */ \
-      defined(__s390x__) || defined(__zarch__)   || defined(__SYSC_ZARCH__)
-    return 1;
+# define BE_HOST_VAL  0
+
+/* Big Endian architectures */
+#elif defined(__ARMEB__) \
+   || defined(__THUMBEB__) \
+   || defined(__AARCH64EB__) \
+   || defined(_MIPSEB) \
+   || defined(__MIPSEB) \
+   || defined(__MIPSEB__) \
+   || defined(__s390x__) \
+   || defined(__zarch__) \
+   || defined(__SYSC_ZARCH__) \
+   || defined(__m68k__)
+
+# define BE_HOST_VAL  1
 
 /* C++20 std::endian enum values */
 #elif defined(__cpp_lib_endian) && !defined(DISABLE_CPLUSPLUS)
-    return constexpr (std::endian::native == std::endian::big);
+
+# define BE_HOST_VAL  constexpr (std::endian::native == std::endian::big)
+
+#endif
+
+
+/* return value is 1 (true) for Big Endian and 0 (false) for Little Endian */
+static inline int big_endian_host(void)
+{
+#ifdef BE_HOST_VAL
+
+    return BE_HOST_VAL;
 
 #else
 
     /* optimizations should replace all of
-     * this with a constant return value) */
+     * this with a constant return value */
     const union {
       uint16_t num;
       uint8_t  bytes[2];
-    } u = { 0x1234 };
+    } u = { 0xAABB };
 
-    return (u.bytes[0] == 0x12);
+    return (u.bytes[0] == 0xAA);
 
 #endif
 }
+
+#undef BE_HOST_VAL
 
 #define HOST_IS_BIG()    (big_endian_host() == 1)
 #define HOST_IS_LITTLE() (big_endian_host() == 0)
@@ -315,40 +355,43 @@ static inline int big_endian_host(void)
 
 #if defined(HAVE_STDCXX11) && !defined(DISABLE_CPLUSPLUS)
 
-/* C++ function template similar to std::byteswap() */
-template<typename T, typename std::enable_if<std::is_integral<T>::value, bool>::type = true>
-constexpr T bswap(T val) noexcept
+namespace Byte_Swap
 {
-  if constexpr (sizeof(T) == 1) {
-    return val;
-  } else if constexpr (sizeof(T) == 2) {
-    return BSWAP16(val);
-  } else if constexpr (sizeof(T) == 4) {
-    return BSWAP32(val);
-  } else if constexpr (sizeof(T) == 8) {
-    return BSWAP64(val);
-  }
+    /* C++ function template similar to std::byteswap() */
+    template<typename T, typename std::enable_if<std::is_integral<T>::value, bool>::type = true>
+    constexpr T bswap(T val) noexcept
+    {
+        if constexpr (sizeof(T) == 1) {
+            return val;
+        } else if constexpr (sizeof(T) == 2) {
+            return BSWAP16(val);
+        } else if constexpr (sizeof(T) == 4) {
+            return BSWAP32(val);
+        } else if constexpr (sizeof(T) == 8) {
+            return BSWAP64(val);
+        }
 
-  static_assert(sizeof(T) <= 8,
-                "unsupported parameter type in template `bswap'");
+        static_assert(sizeof(T) <= 8,
+            "unsupported parameter type in template `bswap'");
+    }
 }
 
-# define BSWAP(x) bswap(x)
+# define BSWAP(x) Byte_Swap::bswap(x)
 
 #elif defined(HAVE_STDC11)
 
 /* generic macro */
 # define BSWAP(x) \
-  _Generic((x), \
-    int8_t   : (x), \
-    int16_t  : BSWAP16(x), \
-    int32_t  : BSWAP32(x), \
-    int64_t  : BSWAP64(x), \
-    uint8_t  : (x), \
-    uint16_t : BSWAP16(x), \
-    uint32_t : BSWAP32(x), \
-    uint64_t : BSWAP64(x) \
-  )
+    _Generic((x), \
+        int8_t   : (x), \
+        int16_t  : BSWAP16(x), \
+        int32_t  : BSWAP32(x), \
+        int64_t  : BSWAP64(x), \
+        uint8_t  : (x), \
+        uint16_t : BSWAP16(x), \
+        uint32_t : BSWAP32(x), \
+        uint64_t : BSWAP64(x) \
+    )
 
 #endif
 
