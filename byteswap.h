@@ -191,6 +191,8 @@
 #endif
 
 
+
+
 /* BSWAP macros */
 
 #if defined(HAVE_BUILTIN_BSWAP) || defined(__GNUC__)
@@ -235,6 +237,8 @@
                      (((uint64_t)(x) & 0x00000000000000ffULL) << 56))
 
 #endif
+
+
 
 
 /* byte order macros defined by compiler or system headers */
@@ -351,23 +355,30 @@ static inline int big_endian_host(void)
 #define HTONLL(x)        HOST_TO_BE64(x)
 
 
-/* generic macros */
 
-#if defined(HAVE_STDCXX11) && !defined(DISABLE_CPLUSPLUS)
+
+/* generic macros / C++ templates */
+
+#if defined(__cpp_lib_byteswap) && !defined(DISABLE_CPLUSPLUS)
+
+/* C++23 */
+# define BSWAP(x)  std::byteswap(x)
+
+#elif defined(HAVE_STDCXX11) && !defined(DISABLE_CPLUSPLUS)
 
 namespace Byte_Swap
 {
     /* C++ function template similar to std::byteswap() */
     template<typename T, typename std::enable_if<std::is_integral<T>::value, bool>::type = true>
-    constexpr T bswap(T val) noexcept
+    T bswap(T val) noexcept
     {
-        if constexpr (sizeof(T) == 1) {
+        if (sizeof(T) == 1) {
             return val;
-        } else if constexpr (sizeof(T) == 2) {
+        } else if (sizeof(T) == 2) {
             return BSWAP16(val);
-        } else if constexpr (sizeof(T) == 4) {
+        } else if (sizeof(T) == 4) {
             return BSWAP32(val);
-        } else if constexpr (sizeof(T) == 8) {
+        } else if (sizeof(T) == 8) {
             return BSWAP64(val);
         }
 
@@ -376,7 +387,7 @@ namespace Byte_Swap
     }
 }
 
-# define BSWAP(x) Byte_Swap::bswap(x)
+# define BSWAP(x)  Byte_Swap::bswap(x)
 
 #elif defined(HAVE_STDC11)
 
@@ -395,6 +406,7 @@ namespace Byte_Swap
 
 #endif
 
+
 #ifdef BSWAP
 # define BE_TO_HOST(x)  (HOST_IS_BIG()    ? (x) : BSWAP(x))
 # define LE_TO_HOST(x)  (HOST_IS_LITTLE() ? (x) : BSWAP(x))
@@ -403,5 +415,6 @@ namespace Byte_Swap
 # define HTON(x)        HOST_TO_BE(x)
 # define NTOH(x)        BE_TO_HOST(x)
 #endif
+
 
 #endif //BYTESWAP_H
