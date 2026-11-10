@@ -26,85 +26,90 @@
 #define BYTESWAP_H
 
 /**
-  This header provides endianess and byteswap macros in a unified way for most
-  compilers and operating systems. The macro names are all uppercase to 
-  hopefully not conflict with existing functions.
-  Only 16, 32 and 64 bit signed and unsigned integers are supported.
-  Mixed endian is not supported.
+This header provides endianess and byteswap macros in a unified way for most
+compilers and operating systems. The macro names are all uppercase to
+hopefully not conflict with existing functions.
+Only 16, 32 and 64 bit signed and unsigned integers are supported.
+Middle endian byte swapping is not supported.
 
 
-  Reverse byte order:
+Reverse byte order:
 
-      uint16_t BSWAP16(uint16_t x);
-      uint32_t BSWAP32(uint32_t x);
-      uint64_t BSWAP64(uint64_t x);
-
-
-  Convert values between host and big-/little-endian byte order:
-
-      uint16_t HOST_TO_BE16(uint16_t host_16bits);
-      uint16_t HOST_TO_LE16(uint16_t host_16bits);
-      uint16_t BE16_TO_HOST(uint16_t big_endian_16bits);
-      uint16_t LE16_TO_HOST(uint16_t little_endian_16bits);
-
-      uint32_t HOST_TO_BE32(uint32_t host_32bits);
-      uint32_t HOST_TO_LE32(uint32_t host_32bits);
-      uint32_t BE32_TO_HOST(uint32_t big_endian_32bits);
-      uint32_t LE32_TO_HOST(uint32_t little_endian_32bits);
-
-      uint64_t HOST_TO_BE64(uint64_t host_64bits);
-      uint64_t HOST_TO_LE64(uint64_t host_64bits);
-      uint64_t BE64_TO_HOST(uint64_t big_endian_64bits);
-      uint64_t LE64_TO_HOST(uint64_t little_endian_64bits);
+    uint16_t BSWAP16(uint16_t x);
+    uint32_t BSWAP32(uint32_t x);
+    uint64_t BSWAP64(uint64_t x);
 
 
-  Convert values between host and network byte order:
+Convert values between host and big-/little-endian byte order:
 
-      uint16_t HTONS(uint16_t hostshort);
-      uint32_t HTONL(uint32_t hostlong);
-      uint64_t HTONLL(uint64_t hostlonglong);
+    uint16_t HOST_TO_BE16(uint16_t host_16bits);
+    uint16_t HOST_TO_LE16(uint16_t host_16bits);
+    uint16_t BE16_TO_HOST(uint16_t big_endian_16bits);
+    uint16_t LE16_TO_HOST(uint16_t little_endian_16bits);
 
-      uint16_t NTOHS(uint16_t netshort);
-      uint32_t NTOHL(uint32_t netlong);
-      uint64_t NTOHLL(uint64_t netlonglong);
+    uint32_t HOST_TO_BE32(uint32_t host_32bits);
+    uint32_t HOST_TO_LE32(uint32_t host_32bits);
+    uint32_t BE32_TO_HOST(uint32_t big_endian_32bits);
+    uint32_t LE32_TO_HOST(uint32_t little_endian_32bits);
 
-
-  Generic macros for all signed and unsigned integers.
-  Minimum requirement is C11 or C++11.
-
-      intX_t BSWAP(intX_t x);
-      intX_t HOST_TO_BE(intX_t host_bits);
-      intX_t HOST_TO_LE(intX_t host_bits);
-      intX_t BE_TO_HOST(intX_t big_endian_bits);
-      intX_t LE_TO_HOST(intX_t little_endian_bits);
-      intX_t HTON(intX_t host_bits);
-      intX_t NTOH(intX_t net_bits);
+    uint64_t HOST_TO_BE64(uint64_t host_64bits);
+    uint64_t HOST_TO_LE64(uint64_t host_64bits);
+    uint64_t BE64_TO_HOST(uint64_t big_endian_64bits);
+    uint64_t LE64_TO_HOST(uint64_t little_endian_64bits);
 
 
-  The following function returns 1 (true) if byte order is Big Endian
-  and 0 (false) if it's Little Endian.
-  In most cases compiler optimizations should turn the return value
-  into a compile-time constant and optimize the function away.
+Convert values between host and network byte order:
 
-      static inline int big_endian_host(void);
+    uint16_t HTONS(uint16_t hostshort);
+    uint32_t HTONL(uint32_t hostlong);
+    uint64_t HTONLL(uint64_t hostlonglong);
 
-
-  These convenience macros are available too:
-
-      #define HOST_IS_BIG()    (big_endian_host() == 1)
-      #define HOST_IS_LITTLE() (big_endian_host() == 0)
+    uint16_t NTOHS(uint16_t netshort);
+    uint32_t NTOHL(uint32_t netlong);
+    uint64_t NTOHLL(uint64_t netlonglong);
 
 
-  Configuration macros can be set too:
+Generic macros for all signed and unsigned integers.
+Minimum requirement is C11 or C++11.
 
-      #define DISABLE_CPLUSPLUS 1        // disable all C++ features even when compiling in C++ mode
-      #define HAVE_ENDIAN_H 1            // <endian.h> is present
-      #define HAVE_SYS_ENDIAN_H 1        // <sys/endian.h> is present
-      #define HAVE_CXX_HEADER_VERSION 1  // <version> is present
-      #define HAVE_CXX_HEADER_BIT 1      // <bit> is present
-      #define HAVE_STDC11 1              // C11 is available
-      #define HAVE_STDCXX11 1            // C++11 is available
-      #define HAVE_STDCXX20 1            // C++20 is available
+    intX_t BSWAP(intX_t x);
+    intX_t HOST_TO_BE(intX_t host_bits);
+    intX_t HOST_TO_LE(intX_t host_bits);
+    intX_t BE_TO_HOST(intX_t big_endian_bits);
+    intX_t LE_TO_HOST(intX_t little_endian_bits);
+    intX_t HTON(intX_t host_bits);
+    intX_t NTOH(intX_t net_bits);
+
+
+These macros are defined as symbolic values for the different
+endian types. The predefined macro BSWAP_BYTE_ORDER may be set
+to one of these.
+
+    #define BSWAP_BIG_ENDIAN          1234
+    #define BSWAP_LITTLE_ENDIAN       4321
+    #define BSWAP_WORD_BIG_ENDIAN     2143
+    #define BSWAP_WORD_LITTLE_ENDIAN  3412  //PDP-11
+    #define BSWAP_UNKNOWN_ENDIAN        -1
+
+
+The following function returns a numeric value for the host byte order.
+The compiler may turn the return value into a compile-time constant
+and optimize the function away.
+
+    static inline int get_byte_order(void);
+
+
+Configuration macros can be set too:
+
+    #define GET_BYTE_ORDER_RUNTIME 1   // don't use predefined macros in get_byte_order()
+    #define DISABLE_CPLUSPLUS 1        // don't use C++ features when compiling in C++ mode
+    #define HAVE_ENDIAN_H 1            // <endian.h> is present
+    #define HAVE_SYS_ENDIAN_H 1        // <sys/endian.h> is present
+    #define HAVE_CXX_HEADER_VERSION 1  // <version> is present
+    #define HAVE_CXX_HEADER_BIT 1      // <bit> is present
+    #define HAVE_STDC11 1              // C11 is available
+    #define HAVE_STDCXX11 1            // C++11 is available
+    #define HAVE_STDCXX20 1            // C++20 is available
 **/
 
 #include <stdint.h>
@@ -241,110 +246,128 @@
 
 
 
+/* symbolic values for different endianess types */
+#define BSWAP_BIG_ENDIAN          1234
+#define BSWAP_LITTLE_ENDIAN       4321
+#define BSWAP_WORD_BIG_ENDIAN     2143
+#define BSWAP_WORD_LITTLE_ENDIAN  3412 /* PDP-11 */
+#define BSWAP_UNKNOWN_ENDIAN        -1
+
+
+
+
 /* byte order macros defined by compiler or system headers */
-#if defined(__BYTE_ORDER__) && \
-    defined(__ORDER_BIG_ENDIAN__)
+#if (defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)) || \
+    (defined(__BYTE_ORDER  ) && defined(__ORDER_BIG_ENDIAN  ) && (__BYTE_ORDER   == __ORDER_BIG_ENDIAN  )) || \
+    (defined( _BYTE_ORDER  ) && defined( _ORDER_BIG_ENDIAN  ) && ( _BYTE_ORDER   ==  _ORDER_BIG_ENDIAN  )) || \
+    (defined(  BYTE_ORDER  ) && defined(  ORDER_BIG_ENDIAN  ) && (  BYTE_ORDER   ==   ORDER_BIG_ENDIAN  ))
+# define BSWAP_BYTE_ORDER  BSWAP_BIG_ENDIAN
 
-# define BE_HOST_VAL  (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+#elif (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)) || \
+      (defined(__BYTE_ORDER  ) && defined(__ORDER_LITTLE_ENDIAN  ) && (__BYTE_ORDER   == __ORDER_LITTLE_ENDIAN  )) || \
+      (defined( _BYTE_ORDER  ) && defined( _ORDER_LITTLE_ENDIAN  ) && ( _BYTE_ORDER   ==  _ORDER_LITTLE_ENDIAN  )) || \
+      (defined(  BYTE_ORDER  ) && defined(  ORDER_LITTLE_ENDIAN  ) && (  BYTE_ORDER   ==   ORDER_LITTLE_ENDIAN  ))
+# define BSWAP_BYTE_ORDER  BSWAP_LITTLE_ENDIAN
 
-#elif defined(__BYTE_ORDER) && \
-      defined(__ORDER_BIG_ENDIAN)
+/* predefined Big Endian macros */
+#elif (defined(__BIG_ENDIAN__) && !defined(__LITTLE_ENDIAN__)) || \
+       defined(__ARMEB__)     || \
+       defined(__THUMBEB__)   || \
+       defined(__AARCH64EB__) || \
+       defined( _MIPSEB)      || \
+       defined(__MIPSEB)      || \
+       defined(__MIPSEB__)
+# define BSWAP_BYTE_ORDER  BSWAP_BIG_ENDIAN
 
-# define BE_HOST_VAL  (__BYTE_ORDER == __ORDER_BIG_ENDIAN)
+/* predefined Little Endian macros */
+#elif (defined(__LITTLE_ENDIAN__) && !defined(__BIG_ENDIAN__)) || \
+       defined(__ARMEL__)     || \
+       defined(__THUMBEL__)   || \
+       defined(__AARCH64EL__) || \
+       defined( _MIPSEL)      || \
+       defined(__MIPSEL)      || \
+       defined(__MIPSEL__)
+# define BSWAP_BYTE_ORDER  BSWAP_LITTLE_ENDIAN
 
-#elif defined(_BYTE_ORDER) && \
-      defined(_ORDER_BIG_ENDIAN)
+/* Big Endian exclusive architecture (z/arch and Motorola 68K) */
+#elif defined(__s390x__)      || \
+      defined(__zarch__)      || \
+      defined(__SYSC_ZARCH__) || \
+      defined(__m68k__)
+# define BSWAP_BYTE_ORDER  BSWAP_BIG_ENDIAN
 
-# define BE_HOST_VAL  (_BYTE_ORDER == _ORDER_BIG_ENDIAN)
-
-#elif defined(BYTE_ORDER) && \
-      defined(ORDER_BIG_ENDIAN)
-
-# define BE_HOST_VAL  (BYTE_ORDER == ORDER_BIG_ENDIAN)
-
-/* Little Endian architectures */
-#elif defined(__amd64) \
-   || defined(__i386) \
-   || defined(__x86_64) \
-   || defined(_M_AMD64) \
-   || defined(_M_IX86) \
-   || defined(_M_X64) \
-   || defined(__ARMEL__) \
-   || defined(__THUMBEL__) \
-   || defined(__AARCH64EL__) \
-   || defined(_MIPSEL) \
-   || defined(__MIPSEL) \
-   || defined(__MIPSEL__) \
-   || defined(__BFIN__)
-
-# define BE_HOST_VAL  0
-
-/* Big Endian architectures */
-#elif defined(__ARMEB__) \
-   || defined(__THUMBEB__) \
-   || defined(__AARCH64EB__) \
-   || defined(_MIPSEB) \
-   || defined(__MIPSEB) \
-   || defined(__MIPSEB__) \
-   || defined(__s390x__) \
-   || defined(__zarch__) \
-   || defined(__SYSC_ZARCH__) \
-   || defined(__m68k__)
-
-# define BE_HOST_VAL  1
-
-/* C++20 std::endian enum values */
-#elif defined(__cpp_lib_endian) && !defined(DISABLE_CPLUSPLUS)
-
-# define BE_HOST_VAL  constexpr (std::endian::native == std::endian::big)
+/* Little Endian exclusive architecture (x86 and Blackfin) */
+#elif defined(__amd64)  || \
+      defined(__i386)   || \
+      defined(__x86_64) || \
+      defined(_M_AMD64) || \
+      defined(_M_IX86)  || \
+      defined(_M_X64)   || \
+      defined(__BFIN__)
+# define BSWAP_BYTE_ORDER  BSWAP_LITTLE_ENDIAN
 
 #endif
 
 
-/* return value is 1 (true) for Big Endian and 0 (false) for Little Endian */
-static inline int big_endian_host(void)
+/* return value is 1234 for Big Endian and 4321 for Little Endian */
+static inline int get_byte_order(void)
 {
-#ifdef BE_HOST_VAL
+#if defined(BSWAP_BYTE_ORDER) && !defined(GET_BYTE_ORDER_RUNTIME)
 
-    return BE_HOST_VAL;
+    return BSWAP_BYTE_ORDER;
+
+/* C++20 std::endian enum values */
+#elif defined(__cpp_lib_endian) && !defined(DISABLE_CPLUSPLUS)
+    if constexpr (std::endian::native == std::endian::big) {
+        return BSWAP_BIG_ENDIAN;
+    } else if constexpr (std::endian::native == std::endian::little) {
+        return BSWAP_LITTLE_ENDIAN;
+    } else {
+        return BSWAP_UNKNOWN_ENDIAN;
+    }
 
 #else
 
-    /* optimizations should replace all of
-     * this with a constant return value */
     const union {
-      uint16_t num;
-      uint8_t  bytes[2];
-    } u = { 0xAABB };
+      uint32_t value;
+      uint8_t  data[4];
+    } u = {
+      .data[0] = 0x11,
+      .data[1] = 0x22,
+      .data[2] = 0x33,
+      .data[3] = 0x44
+    };
 
-    return (u.bytes[0] == 0xAA);
+    switch (u.value)
+    {
+    case 0x11223344: return BSWAP_BIG_ENDIAN;
+    case 0x44332211: return BSWAP_LITTLE_ENDIAN;
+    case 0x22114433: return BSWAP_WORD_BIG_ENDIAN;
+    case 0x33441122: return BSWAP_WORD_LITTLE_ENDIAN;
+    default:         return BSWAP_UNKNOWN_ENDIAN;
+    }
 
 #endif
 }
 
-#undef BE_HOST_VAL
-
-#define HOST_IS_BIG()    (big_endian_host() == 1)
-#define HOST_IS_LITTLE() (big_endian_host() == 0)
-
 
 /* convert between host order and BE/LE */
 
-#define BE16_TO_HOST(x)  (HOST_IS_BIG()    ? (x) : BSWAP16(x))
-#define BE32_TO_HOST(x)  (HOST_IS_BIG()    ? (x) : BSWAP32(x))
-#define BE64_TO_HOST(x)  (HOST_IS_BIG()    ? (x) : BSWAP64(x))
+#define BE16_TO_HOST(x)  (get_byte_order() == BSWAP_BIG_ENDIAN    ? (x) : BSWAP16(x))
+#define BE32_TO_HOST(x)  (get_byte_order() == BSWAP_BIG_ENDIAN    ? (x) : BSWAP32(x))
+#define BE64_TO_HOST(x)  (get_byte_order() == BSWAP_BIG_ENDIAN    ? (x) : BSWAP64(x))
 
-#define HOST_TO_BE16(x)  (HOST_IS_BIG()    ? (x) : BSWAP16(x))
-#define HOST_TO_BE32(x)  (HOST_IS_BIG()    ? (x) : BSWAP32(x))
-#define HOST_TO_BE64(x)  (HOST_IS_BIG()    ? (x) : BSWAP64(x))
+#define HOST_TO_BE16(x)  (get_byte_order() == BSWAP_BIG_ENDIAN    ? (x) : BSWAP16(x))
+#define HOST_TO_BE32(x)  (get_byte_order() == BSWAP_BIG_ENDIAN    ? (x) : BSWAP32(x))
+#define HOST_TO_BE64(x)  (get_byte_order() == BSWAP_BIG_ENDIAN    ? (x) : BSWAP64(x))
 
-#define LE16_TO_HOST(x)  (HOST_IS_LITTLE() ? (x) : BSWAP16(x))
-#define LE32_TO_HOST(x)  (HOST_IS_LITTLE() ? (x) : BSWAP32(x))
-#define LE64_TO_HOST(x)  (HOST_IS_LITTLE() ? (x) : BSWAP64(x))
+#define LE16_TO_HOST(x)  (get_byte_order() == BSWAP_LITTLE_ENDIAN ? (x) : BSWAP16(x))
+#define LE32_TO_HOST(x)  (get_byte_order() == BSWAP_LITTLE_ENDIAN ? (x) : BSWAP32(x))
+#define LE64_TO_HOST(x)  (get_byte_order() == BSWAP_LITTLE_ENDIAN ? (x) : BSWAP64(x))
 
-#define HOST_TO_LE16(x)  (HOST_IS_LITTLE() ? (x) : BSWAP16(x))
-#define HOST_TO_LE32(x)  (HOST_IS_LITTLE() ? (x) : BSWAP32(x))
-#define HOST_TO_LE64(x)  (HOST_IS_LITTLE() ? (x) : BSWAP64(x))
+#define HOST_TO_LE16(x)  (get_byte_order() == BSWAP_LITTLE_ENDIAN ? (x) : BSWAP16(x))
+#define HOST_TO_LE32(x)  (get_byte_order() == BSWAP_LITTLE_ENDIAN ? (x) : BSWAP32(x))
+#define HOST_TO_LE64(x)  (get_byte_order() == BSWAP_LITTLE_ENDIAN ? (x) : BSWAP64(x))
 
 #define NTOHS(x)         BE16_TO_HOST(x)
 #define NTOHL(x)         BE32_TO_HOST(x)
@@ -408,10 +431,10 @@ namespace Byte_Swap
 
 
 #ifdef BSWAP
-# define BE_TO_HOST(x)  (HOST_IS_BIG()    ? (x) : BSWAP(x))
-# define LE_TO_HOST(x)  (HOST_IS_LITTLE() ? (x) : BSWAP(x))
-# define HOST_TO_BE(x)  (HOST_IS_BIG()    ? (x) : BSWAP(x))
-# define HOST_TO_LE(x)  (HOST_IS_LITTLE() ? (x) : BSWAP(x))
+# define BE_TO_HOST(x)  (get_byte_order() == BSWAP_BIG_ENDIAN    ? (x) : BSWAP(x))
+# define LE_TO_HOST(x)  (get_byte_order() == BSWAP_LITTLE_ENDIAN ? (x) : BSWAP(x))
+# define HOST_TO_BE(x)  (get_byte_order() == BSWAP_BIG_ENDIAN    ? (x) : BSWAP(x))
+# define HOST_TO_LE(x)  (get_byte_order() == BSWAP_LITTLE_ENDIAN ? (x) : BSWAP(x))
 # define HTON(x)        HOST_TO_BE(x)
 # define NTOH(x)        BE_TO_HOST(x)
 #endif
