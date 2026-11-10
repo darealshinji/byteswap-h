@@ -269,6 +269,12 @@ Configuration macros can be set too:
       (defined(  BYTE_ORDER  ) && defined(  ORDER_LITTLE_ENDIAN  ) && (  BYTE_ORDER   ==   ORDER_LITTLE_ENDIAN  ))
 # define BSWAP_BYTE_ORDER  BSWAP_LITTLE_ENDIAN
 
+#elif (defined(__BYTE_ORDER__) && defined(__ORDER_PDP_ENDIAN__) && (__BYTE_ORDER__ == __ORDER_PDP_ENDIAN__)) || \
+      (defined(__BYTE_ORDER  ) && defined(__ORDER_PDP_ENDIAN  ) && (__BYTE_ORDER   == __ORDER_PDP_ENDIAN  )) || \
+      (defined( _BYTE_ORDER  ) && defined( _ORDER_PDP_ENDIAN  ) && ( _BYTE_ORDER   ==  _ORDER_PDP_ENDIAN  )) || \
+      (defined(  BYTE_ORDER  ) && defined(  ORDER_PDP_ENDIAN  ) && (  BYTE_ORDER   ==   ORDER_PDP_ENDIAN  ))
+# define BSWAP_BYTE_ORDER  BSWAP_WORD_LITTLE_ENDIAN
+
 /* predefined Big Endian macros */
 #elif (defined(__BIG_ENDIAN__) && !defined(__LITTLE_ENDIAN__)) || \
        defined(__ARMEB__)     || \
