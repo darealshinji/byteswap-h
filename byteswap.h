@@ -412,7 +412,7 @@ namespace Byte_Swap
         }
 
         static_assert(sizeof(T) <= 8,
-            "unsupported parameter type in template `bswap'");
+            "unsupported parameter type in template `Byte_Swap::bswap'");
     }
 }
 
