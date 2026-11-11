@@ -276,7 +276,7 @@ Configuration macros can be set too:
 # define BSWAP_BYTE_ORDER  BSWAP_WORD_LITTLE_ENDIAN
 
 /* predefined Big Endian macros */
-#elif (defined(__BIG_ENDIAN__) && !defined(__LITTLE_ENDIAN__)) || \
+#elif /*(defined(__BIG_ENDIAN__) && !defined(__LITTLE_ENDIAN__)) ||*/ \
        defined(__ARMEB__)     || \
        defined(__THUMBEB__)   || \
        defined(__AARCH64EB__) || \
@@ -286,7 +286,7 @@ Configuration macros can be set too:
 # define BSWAP_BYTE_ORDER  BSWAP_BIG_ENDIAN
 
 /* predefined Little Endian macros */
-#elif (defined(__LITTLE_ENDIAN__) && !defined(__BIG_ENDIAN__)) || \
+#elif /*(defined(__LITTLE_ENDIAN__) && !defined(__BIG_ENDIAN__)) ||*/ \
        defined(__ARMEL__)     || \
        defined(__THUMBEL__)   || \
        defined(__AARCH64EL__) || \
