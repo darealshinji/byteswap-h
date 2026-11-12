@@ -2,7 +2,7 @@ This header provides endianess and byteswap macros in a unified way for most
 compilers and operating systems. The macro names are all uppercase to
 hopefully not conflict with existing functions.
 Only 16, 32 and 64 bit signed and unsigned integers are supported.
-Middle endian byte swapping is not supported.
+Middle Endian is not fully supported, only simple word order swapping is available.
 
 
 Reverse byte order:
@@ -12,7 +12,13 @@ Reverse byte order:
     uint64_t BSWAP64(uint64_t x);
 
 
-Convert values between host and big-/little-endian byte order:
+Reverse word order (middle endian):
+
+    uint32_t WSWAP32(uint32_t x);
+    uint64_t WSWAP64(uint64_t x);
+
+
+Convert values between host and big/little endian byte order:
 
     uint16_t HOST_TO_BE16(uint16_t host_16bits);
     uint16_t HOST_TO_LE16(uint16_t host_16bits);
@@ -45,6 +51,7 @@ Generic macros for all signed and unsigned integers.
 Minimum requirement is C11 or C++11.
 
     intX_t BSWAP(intX_t x);
+    intX_t WSWAP(intX_t x);
     intX_t HOST_TO_BE(intX_t host_bits);
     intX_t HOST_TO_LE(intX_t host_bits);
     intX_t BE_TO_HOST(intX_t big_endian_bits);
@@ -59,9 +66,11 @@ to one of these.
 
     #define BSWAP_BIG_ENDIAN          1234
     #define BSWAP_LITTLE_ENDIAN       4321
-    #define BSWAP_WORD_BIG_ENDIAN     2143
-    #define BSWAP_WORD_LITTLE_ENDIAN  3412  //PDP-11
+    #define BSWAP_WORD_BIG_ENDIAN     2143 // Honeywell 316
+    #define BSWAP_WORD_LITTLE_ENDIAN  3412 // PDP-11
     #define BSWAP_UNKNOWN_ENDIAN        -1
+    #define BSWAP_H316_ENDIAN         BSWAP_WORD_BIG_ENDIAN
+    #define BSWAP_PDP_ENDIAN          BSWAP_WORD_LITTLE_ENDIAN
 
 
 The following function returns a numeric value for the host byte order.

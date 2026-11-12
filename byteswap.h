@@ -30,7 +30,7 @@ This header provides endianess and byteswap macros in a unified way for most
 compilers and operating systems. The macro names are all uppercase to
 hopefully not conflict with existing functions.
 Only 16, 32 and 64 bit signed and unsigned integers are supported.
-Middle endian byte swapping is not supported.
+Middle Endian is not fully supported, only simple word order swapping is available.
 
 
 Reverse byte order:
@@ -40,7 +40,13 @@ Reverse byte order:
     uint64_t BSWAP64(uint64_t x);
 
 
-Convert values between host and big-/little-endian byte order:
+Reverse word order (middle endian):
+
+    uint32_t WSWAP32(uint32_t x);
+    uint64_t WSWAP64(uint64_t x);
+
+
+Convert values between host and big/little endian byte order:
 
     uint16_t HOST_TO_BE16(uint16_t host_16bits);
     uint16_t HOST_TO_LE16(uint16_t host_16bits);
@@ -73,6 +79,7 @@ Generic macros for all signed and unsigned integers.
 Minimum requirement is C11 or C++11.
 
     intX_t BSWAP(intX_t x);
+    intX_t WSWAP(intX_t x);
     intX_t HOST_TO_BE(intX_t host_bits);
     intX_t HOST_TO_LE(intX_t host_bits);
     intX_t BE_TO_HOST(intX_t big_endian_bits);
@@ -87,9 +94,11 @@ to one of these.
 
     #define BSWAP_BIG_ENDIAN          1234
     #define BSWAP_LITTLE_ENDIAN       4321
-    #define BSWAP_WORD_BIG_ENDIAN     2143
-    #define BSWAP_WORD_LITTLE_ENDIAN  3412  //PDP-11
+    #define BSWAP_WORD_BIG_ENDIAN     2143 // Honeywell 316
+    #define BSWAP_WORD_LITTLE_ENDIAN  3412 // PDP-11
     #define BSWAP_UNKNOWN_ENDIAN        -1
+    #define BSWAP_H316_ENDIAN         BSWAP_WORD_BIG_ENDIAN
+    #define BSWAP_PDP_ENDIAN          BSWAP_WORD_LITTLE_ENDIAN
 
 
 The following function returns a numeric value for the host byte order.
@@ -226,22 +235,30 @@ Configuration macros can be set too:
 
 /* fall back to bit shifting; with optimizations enabled many compilers will
  * recognize the byte swapping and generate the same code as if using builtins */
-# define BSWAP16(x) ((((uint16_t)(x) & 0xff00) >> 8) | \
-                     (((uint16_t)(x) & 0x00ff) << 8))
-# define BSWAP32(x) ((((uint32_t)(x) & 0xff000000) >> 24) | \
-                     (((uint32_t)(x) & 0x00ff0000) >>  8) | \
-                     (((uint32_t)(x) & 0x0000ff00) <<  8) | \
-                     (((uint32_t)(x) & 0x000000ff) << 24))
-# define BSWAP64(x) ((((uint64_t)(x) & 0xff00000000000000ULL) >> 56) | \
-                     (((uint64_t)(x) & 0x00ff000000000000ULL) >> 40) | \
-                     (((uint64_t)(x) & 0x0000ff0000000000ULL) >> 24) | \
-                     (((uint64_t)(x) & 0x000000ff00000000ULL) >>  8) | \
-                     (((uint64_t)(x) & 0x00000000ff000000ULL) <<  8) | \
-                     (((uint64_t)(x) & 0x0000000000ff0000ULL) << 24) | \
-                     (((uint64_t)(x) & 0x000000000000ff00ULL) << 40) | \
-                     (((uint64_t)(x) & 0x00000000000000ffULL) << 56))
+# define BSWAP16(x) ((((uint16_t)(x) & UINT16_C(0xff00)) >> 8) | \
+                     (((uint16_t)(x) & UINT16_C(0x00ff)) << 8))
+# define BSWAP32(x) ((((uint32_t)(x) & UINT32_C(0xff000000)) >> 24) | \
+                     (((uint32_t)(x) & UINT32_C(0x00ff0000)) >>  8) | \
+                     (((uint32_t)(x) & UINT32_C(0x0000ff00)) <<  8) | \
+                     (((uint32_t)(x) & UINT32_C(0x000000ff)) << 24))
+# define BSWAP64(x) ((((uint64_t)(x) & UINT64_C(0xff00000000000000)) >> 56) | \
+                     (((uint64_t)(x) & UINT64_C(0x00ff000000000000)) >> 40) | \
+                     (((uint64_t)(x) & UINT64_C(0x0000ff0000000000)) >> 24) | \
+                     (((uint64_t)(x) & UINT64_C(0x000000ff00000000)) >>  8) | \
+                     (((uint64_t)(x) & UINT64_C(0x00000000ff000000)) <<  8) | \
+                     (((uint64_t)(x) & UINT64_C(0x0000000000ff0000)) << 24) | \
+                     (((uint64_t)(x) & UINT64_C(0x000000000000ff00)) << 40) | \
+                     (((uint64_t)(x) & UINT64_C(0x00000000000000ff)) << 56))
 
 #endif
+
+/* word order swapping macros */
+#define WSWAP32(x) ((((uint32_t)(x) & UINT32_C(0xffff0000)) >> 16) | \
+                    (((uint32_t)(x) & UINT32_C(0x0000ffff)) << 16))
+#define WSWAP64(x) ((((uint64_t)(x) & UINT64_C(0xffff000000000000)) >> 48) | \
+                    (((uint64_t)(x) & UINT64_C(0x0000ffff00000000)) >> 16) | \
+                    (((uint64_t)(x) & UINT64_C(0x00000000ffff0000)) << 16) | \
+                    (((uint64_t)(x) & UINT64_C(0x000000000000ffff)) << 48))
 
 
 
@@ -249,50 +266,68 @@ Configuration macros can be set too:
 /* symbolic values for different endianess types */
 #define BSWAP_BIG_ENDIAN          1234
 #define BSWAP_LITTLE_ENDIAN       4321
-#define BSWAP_WORD_BIG_ENDIAN     2143
+#define BSWAP_WORD_BIG_ENDIAN     2143 /* Honeywell 316 */
 #define BSWAP_WORD_LITTLE_ENDIAN  3412 /* PDP-11 */
 #define BSWAP_UNKNOWN_ENDIAN        -1
+#define BSWAP_H316_ENDIAN         BSWAP_WORD_BIG_ENDIAN
+#define BSWAP_PDP_ENDIAN          BSWAP_WORD_LITTLE_ENDIAN
 
 
 
 
-/* byte order macros defined by compiler or system headers */
-#if (defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)) || \
-    (defined(__BYTE_ORDER  ) && defined(__ORDER_BIG_ENDIAN  ) && (__BYTE_ORDER   == __ORDER_BIG_ENDIAN  )) || \
-    (defined( _BYTE_ORDER  ) && defined( _ORDER_BIG_ENDIAN  ) && ( _BYTE_ORDER   ==  _ORDER_BIG_ENDIAN  )) || \
-    (defined(  BYTE_ORDER  ) && defined(  ORDER_BIG_ENDIAN  ) && (  BYTE_ORDER   ==   ORDER_BIG_ENDIAN  ))
+/* byte order macros defined by compiler and/or system headers */
+#if (defined(__BYTE_ORDER__) && \
+     defined(__ORDER_BIG_ENDIAN__) && \
+     (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)) \
+    || \
+    (defined(__BYTE_ORDER) && \
+     defined(__BIG_ENDIAN) && \
+     (__BYTE_ORDER == __BIG_ENDIAN))
+
 # define BSWAP_BYTE_ORDER  BSWAP_BIG_ENDIAN
 
-#elif (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)) || \
-      (defined(__BYTE_ORDER  ) && defined(__ORDER_LITTLE_ENDIAN  ) && (__BYTE_ORDER   == __ORDER_LITTLE_ENDIAN  )) || \
-      (defined( _BYTE_ORDER  ) && defined( _ORDER_LITTLE_ENDIAN  ) && ( _BYTE_ORDER   ==  _ORDER_LITTLE_ENDIAN  )) || \
-      (defined(  BYTE_ORDER  ) && defined(  ORDER_LITTLE_ENDIAN  ) && (  BYTE_ORDER   ==   ORDER_LITTLE_ENDIAN  ))
+#elif (defined(__BYTE_ORDER__) && \
+       defined(__ORDER_LITTLE_ENDIAN__) && \
+       (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)) \
+    || \
+      (defined(__BYTE_ORDER) && \
+       defined(__LITTLE_ENDIAN) && \
+       (__BYTE_ORDER == __LITTLE_ENDIAN))
+
 # define BSWAP_BYTE_ORDER  BSWAP_LITTLE_ENDIAN
 
-#elif (defined(__BYTE_ORDER__) && defined(__ORDER_PDP_ENDIAN__) && (__BYTE_ORDER__ == __ORDER_PDP_ENDIAN__)) || \
-      (defined(__BYTE_ORDER  ) && defined(__ORDER_PDP_ENDIAN  ) && (__BYTE_ORDER   == __ORDER_PDP_ENDIAN  )) || \
-      (defined( _BYTE_ORDER  ) && defined( _ORDER_PDP_ENDIAN  ) && ( _BYTE_ORDER   ==  _ORDER_PDP_ENDIAN  )) || \
-      (defined(  BYTE_ORDER  ) && defined(  ORDER_PDP_ENDIAN  ) && (  BYTE_ORDER   ==   ORDER_PDP_ENDIAN  ))
+#elif (defined(__BYTE_ORDER__) && \
+       defined(__ORDER_PDP_ENDIAN__) && \
+       (__BYTE_ORDER__ == __ORDER_PDP_ENDIAN__)) \
+    || \
+      (defined(__BYTE_ORDER) && \
+       defined(__PDP_ENDIAN) && \
+       (__BYTE_ORDER == __ORDER_PDP_ENDIAN))
+
 # define BSWAP_BYTE_ORDER  BSWAP_WORD_LITTLE_ENDIAN
 
-/* predefined Big Endian macros */
-#elif /*(defined(__BIG_ENDIAN__) && !defined(__LITTLE_ENDIAN__)) ||*/ \
-       defined(__ARMEB__)     || \
+/* Big Endian detection macros */
+#elif  defined(__ARMEB__)     || \
        defined(__THUMBEB__)   || \
        defined(__AARCH64EB__) || \
        defined( _MIPSEB)      || \
        defined(__MIPSEB)      || \
-       defined(__MIPSEB__)
+       defined(__MIPSEB__)    || \
+       /* defined by some ancient compilers; these are different from the __*_ENDIAN
+        * macros which are related to the __BYTE_ORDER macros above */
+      (defined(__BIG_ENDIAN__) && !defined(__LITTLE_ENDIAN__))
+
 # define BSWAP_BYTE_ORDER  BSWAP_BIG_ENDIAN
 
-/* predefined Little Endian macros */
-#elif /*(defined(__LITTLE_ENDIAN__) && !defined(__BIG_ENDIAN__)) ||*/ \
-       defined(__ARMEL__)     || \
+/* Little Endian detection macros */
+#elif  defined(__ARMEL__)     || \
        defined(__THUMBEL__)   || \
        defined(__AARCH64EL__) || \
        defined( _MIPSEL)      || \
        defined(__MIPSEL)      || \
-       defined(__MIPSEL__)
+       defined(__MIPSEL__)    || \
+      (defined(__LITTLE_ENDIAN__) && !defined(__BIG_ENDIAN__))
+
 # define BSWAP_BYTE_ORDER  BSWAP_LITTLE_ENDIAN
 
 /* Big Endian exclusive architecture (z/arch and Motorola 68K) */
@@ -300,6 +335,7 @@ Configuration macros can be set too:
       defined(__zarch__)      || \
       defined(__SYSC_ZARCH__) || \
       defined(__m68k__)
+
 # define BSWAP_BYTE_ORDER  BSWAP_BIG_ENDIAN
 
 /* Little Endian exclusive architecture (x86 and Blackfin) */
@@ -310,12 +346,13 @@ Configuration macros can be set too:
       defined(_M_IX86)  || \
       defined(_M_X64)   || \
       defined(__BFIN__)
+
 # define BSWAP_BYTE_ORDER  BSWAP_LITTLE_ENDIAN
 
 #endif
 
 
-/* return value is 1234 for Big Endian and 4321 for Little Endian */
+/* return byte order */
 static inline int get_byte_order(void)
 {
 #if defined(BSWAP_BYTE_ORDER) && !defined(GET_BYTE_ORDER_RUNTIME)
@@ -338,18 +375,18 @@ static inline int get_byte_order(void)
       uint32_t value;
       uint8_t  data[4];
     } u = {
-      .data[0] = 0x11,
-      .data[1] = 0x22,
-      .data[2] = 0x33,
-      .data[3] = 0x44
+      .data[0] = 0x01,
+      .data[1] = 0x02,
+      .data[2] = 0x03,
+      .data[3] = 0x04
     };
 
     switch (u.value)
     {
-    case 0x11223344: return BSWAP_BIG_ENDIAN;
-    case 0x44332211: return BSWAP_LITTLE_ENDIAN;
-    case 0x22114433: return BSWAP_WORD_BIG_ENDIAN;
-    case 0x33441122: return BSWAP_WORD_LITTLE_ENDIAN;
+    case 0x01020304: return BSWAP_BIG_ENDIAN;
+    case 0x04030201: return BSWAP_LITTLE_ENDIAN;
+    case 0x02010403: return BSWAP_WORD_BIG_ENDIAN;
+    case 0x03040102: return BSWAP_WORD_LITTLE_ENDIAN;
     default:         return BSWAP_UNKNOWN_ENDIAN;
     }
 
@@ -357,23 +394,25 @@ static inline int get_byte_order(void)
 }
 
 
+
+
 /* convert between host order and BE/LE */
 
-#define BE16_TO_HOST(x)  (get_byte_order() == BSWAP_BIG_ENDIAN    ? (x) : BSWAP16(x))
-#define BE32_TO_HOST(x)  (get_byte_order() == BSWAP_BIG_ENDIAN    ? (x) : BSWAP32(x))
-#define BE64_TO_HOST(x)  (get_byte_order() == BSWAP_BIG_ENDIAN    ? (x) : BSWAP64(x))
+#define BE16_TO_HOST(x)  (get_byte_order() == BSWAP_BIG_ENDIAN ? (x) : BSWAP16(x))
+#define BE32_TO_HOST(x)  (get_byte_order() == BSWAP_BIG_ENDIAN ? (x) : BSWAP32(x))
+#define BE64_TO_HOST(x)  (get_byte_order() == BSWAP_BIG_ENDIAN ? (x) : BSWAP64(x))
 
-#define HOST_TO_BE16(x)  (get_byte_order() == BSWAP_BIG_ENDIAN    ? (x) : BSWAP16(x))
-#define HOST_TO_BE32(x)  (get_byte_order() == BSWAP_BIG_ENDIAN    ? (x) : BSWAP32(x))
-#define HOST_TO_BE64(x)  (get_byte_order() == BSWAP_BIG_ENDIAN    ? (x) : BSWAP64(x))
+#define HOST_TO_BE16(x)  BE16_TO_HOST(x)
+#define HOST_TO_BE32(x)  BE32_TO_HOST(x)
+#define HOST_TO_BE64(x)  BE64_TO_HOST(x)
 
 #define LE16_TO_HOST(x)  (get_byte_order() == BSWAP_LITTLE_ENDIAN ? (x) : BSWAP16(x))
 #define LE32_TO_HOST(x)  (get_byte_order() == BSWAP_LITTLE_ENDIAN ? (x) : BSWAP32(x))
 #define LE64_TO_HOST(x)  (get_byte_order() == BSWAP_LITTLE_ENDIAN ? (x) : BSWAP64(x))
 
-#define HOST_TO_LE16(x)  (get_byte_order() == BSWAP_LITTLE_ENDIAN ? (x) : BSWAP16(x))
-#define HOST_TO_LE32(x)  (get_byte_order() == BSWAP_LITTLE_ENDIAN ? (x) : BSWAP32(x))
-#define HOST_TO_LE64(x)  (get_byte_order() == BSWAP_LITTLE_ENDIAN ? (x) : BSWAP64(x))
+#define HOST_TO_LE16(x)  LE16_TO_HOST(x)
+#define HOST_TO_LE32(x)  LE32_TO_HOST(x)
+#define HOST_TO_LE64(x)  LE64_TO_HOST(x)
 
 #define NTOHS(x)         BE16_TO_HOST(x)
 #define NTOHL(x)         BE32_TO_HOST(x)
@@ -431,6 +470,46 @@ namespace Byte_Swap
         uint16_t : BSWAP16(x), \
         uint32_t : BSWAP32(x), \
         uint64_t : BSWAP64(x) \
+    )
+
+#endif
+
+
+#if defined(HAVE_STDCXX11) && !defined(DISABLE_CPLUSPLUS)
+
+namespace Byte_Swap
+{
+    template<typename T, typename std::enable_if<std::is_integral<T>::value, bool>::type = true>
+    T wswap(T val) noexcept
+    {
+        if (sizeof(T) < 4) {
+            return val;
+        } else if (sizeof(T) == 4) {
+            return WSWAP32(val);
+        } else if (sizeof(T) == 8) {
+            return WSWAP64(val);
+        }
+
+        static_assert(sizeof(T) <= 8,
+            "unsupported parameter type in template `Byte_Swap::wswap'");
+    }
+}
+
+# define WSWAP(x)  Byte_Swap::wswap(x)
+
+#elif defined(HAVE_STDC11)
+
+/* generic macro */
+# define WSWAP(x) \
+    _Generic((x), \
+        int8_t   : (x), \
+        int16_t  : (x), \
+        int32_t  : WSWAP32(x), \
+        int64_t  : WSWAP64(x), \
+        uint8_t  : (x), \
+        uint16_t : (x), \
+        uint32_t : WSWAP32(x), \
+        uint64_t : WSWAP64(x) \
     )
 
 #endif
